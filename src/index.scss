@@ -1,0 +1,56 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+
+@-webkit-keyframes update {
+  from { background-color: rgba(78, 255, 102, 0.6); }
+  to { background-color: inherit; }
+}
+@-moz-keyframes update {
+  from { background-color:rgba(78, 255, 101, 0.6); }
+  to { background-color: inherit; }
+}
+@-o-keyframes update {
+  from { background-color:rgba(78, 255, 101, 0.6); }
+  to { background-color: inherit; }
+}
+@keyframes update {
+  from { background-color: rgba(78, 255, 101, 0.6); }
+  to { background-color: inherit; }
+}
+.update {
+  -webkit-animation: update 2s linear 2; /* Safari 4+ */
+  -moz-animation:    update 2s linear 2; /* Fx 5+ */
+  -o-animation:      update 2s linear 2; /* Opera 12+ */
+  animation:         update 2s linear 2; /* IE 10+ */
+}
+
+// tr {
+//   -moz-transition: all 0.5s ease-in;
+//   -o-transition: all 0.5s ease-in;
+//   -webkit-transition: all 0.5s ease-in;
+//   transition: all 0.5s ease-in;
+//   color: black;
+//   padding: 20px;
+//   animation: blinker 1s linear 1 !important;
+// }
+
+// @keyframes blinker {
+//   50% {
+//     opacity: 0;
+//   }
+// }
+
+
+@import "~bootstrap/scss/bootstrap";
