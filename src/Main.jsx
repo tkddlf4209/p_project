@@ -27,6 +27,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import io from "socket.io-client";
 
+const ADDRESS = "http://localhost:3000";
+
 
 const socketSubscribe = (socket, app) => {
     socket.on("list", (data) => {
@@ -136,7 +138,7 @@ export default class Main extends Component {
     }
 
     componentDidMount() {
-        const socket = io.connect("http://localhost:3002");
+        const socket = io.connect(ADDRESS);
         this.refs = React.createRef();
         socketSubscribe(socket, this);
     }
