@@ -27,7 +27,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import io from "socket.io-client";
 
-const ADDRESS = "http://localhost:3000";
+
+
 
 
 const socketSubscribe = (socket, app) => {
@@ -107,6 +108,29 @@ const socketSubscribe = (socket, app) => {
     });
 };
 
+
+class ToggleButton extends Component {
+    render() {
+        const { defaultChecked, onChange } = this.props;
+        return (<>
+            <div className='custom-control custom-switch'>
+                <input
+                    type='checkbox'
+                    className='custom-control-input'
+                    id='customSwitchesChecked'
+                    defaultChecked={defaultChecked}
+                    onClick={
+                        (e) => onChange(e.target.checked)
+                    }
+                />
+                <label className='custom-control-label' htmlFor='customSwitchesChecked'>
+                    Auto Scroll
+                </label>
+            </div>
+        </>)
+    }
+}
+
 class DashboardCol extends Component {
     render() {
         const { bg, title, count } = this.props;
@@ -134,10 +158,11 @@ export default class Main extends Component {
     state = {
         items: [],
         filter: -1,
-
+        autoScroll: true
     }
 
     componentDidMount() {
+        const ADDRESS = "http://" + window.location.hostname + ":3000";
         const socket = io.connect(ADDRESS);
         this.refs = React.createRef();
         socketSubscribe(socket, this);
@@ -148,7 +173,8 @@ export default class Main extends Component {
         //     console.log(this.myRef.current);
         // }
 
-        if ($('.update').length) {
+
+        if (this.state.autoScroll && $('.update').length) {
             var top = $('.update').offset().top;
             window.scrollTo({ top: top, behavior: 'smooth' })
         }
@@ -230,6 +256,7 @@ export default class Main extends Component {
 
         return (
             <>
+
                 <Container>
                     <Row>
                         <Col >
@@ -251,7 +278,14 @@ export default class Main extends Component {
                     </Row>
                     <hr></hr>
                     <Row>
-                        <Col xs={0} md={9} lg={9}></Col>
+                        <Col xs={0} md={9} lg={9}>
+                            <ToggleButton defaultChecked={true} onChange={
+                                (checked) => {
+                                    this.state.autoScroll = checked;
+                                    //this.setState({ autoScroll: checked })
+                                }
+                            }></ToggleButton>
+                        </Col>
                         <Col xs={12} md={3} lg={3}>
                             <Form >
                                 <Form.Group controlId="exampleForm.SelectCustom">
