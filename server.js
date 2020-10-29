@@ -20,9 +20,18 @@ server.listen(port, function () {
 });
 
 io.adapter(redis({ host: 'localhost', port: 6379 }));
+
+
+var conn_socket_ids=[];
+
+function deleteSocketId(id) {
+  var position = conn_socket_ids.indexOf(id);
+  conn_socket_ids.splice(position, 1);
+}
+
 io.on("connection", (socket) => {
   console.log("websocket connected ID : ", socket.id);
-
+  conn_socket_ids.push(socket.id);
   //io.to(socket.id).emit("list", { socketId: socket.id });
   if(data != null){
     io.to(socket.id).emit("list", data);
@@ -39,11 +48,14 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
+    deleteSocketId(socket.id);
   });
 }); 
 
 process.on('message', function(packet) {
-  //console.log(packet);
+  //console.log(conn_socket_ids.length);
   data = packet.data;
-  io.sockets.emit('update',data);
+  conn_socket_ids.map((id)=>  io.to(id).emit('update',data));
+
+  //io.sockets.emit('update',data);
 });

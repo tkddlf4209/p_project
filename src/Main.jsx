@@ -68,7 +68,7 @@ const socketSubscribe = (socket, app) => {
         });
 
         //console.log("@@@@" + app.refs);
-        //console.log("update :  ", data);
+        console.log("update :  ", data);
     });
 
     socket.on('connect', function () {

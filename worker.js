@@ -64,7 +64,7 @@ setInterval(function(){
        
           if(process.name==="server"){
             
-            //console.log(`Sending message to process with pid: ${process.pm_id}`);
+            console.log(`Sending message to process with pid: ${process.pm_id}`);
             pm2.sendDataToProcessId(
                 {
                 type: 'process:msg',
