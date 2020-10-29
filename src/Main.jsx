@@ -26,11 +26,10 @@ import warning from './img/warning.png'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import io from "socket.io-client";
-
+var MySocket;
 const socketSubscribe = (socket, app) => {
 
-
-
+    socket.removeAllListeners();
     socket.on("list", (data) => {
         app.setState({
             items: data
@@ -95,7 +94,7 @@ const socketSubscribe = (socket, app) => {
 
     socket.on('connect', function () {
         console.log('connect');
-
+        MySocket = socket;
     });
     socket.on('event', function (data) {
         console.log('event');
@@ -103,17 +102,29 @@ const socketSubscribe = (socket, app) => {
     });
     socket.on('disconnect', function () {
         console.log('disconnect');
-        socket.removeAllListeners();
+        MySocket = null;
     });
 
-    setInterval(() => {
-        socket.emit('PING');
-    }, 10000);
+    socket.on('reconnect', function () {
+        console.log('reconnect');
+        MySocket = socket;
+        socketSubscribe(socket, app);
+    });
+
+    socket.on("reconnecting", function (delay, attempt) {
+        console.log('reconnecting');
+    });
 
     socket.on("PONG", () => {
         console.log("RECEIVE PONG");
     })
 };
+
+setInterval(() => {
+    if (MySocket != null) {
+        MySocket.emit('PING');
+    }
+}, 10000);
 
 class ToggleButton extends Component {
     render() {
@@ -171,7 +182,14 @@ export default class Main extends Component {
         const url = "http://" + window.location.hostname + ":3000";
         //const socket = io.connect(ADDRESS);
 
-        var socket = io(url, { transports: ['websocket'] });
+        var socket = io(url, {
+            transports: ['websocket'],
+            reconnection: true,             // whether to reconnect automatically
+            reconnectionAttempts: Infinity, // number of reconnection attempts before giving up
+            reconnectionDelay: 1000,        // how long to initially wait before attempting a new reconnection
+            reconnectionDelayMax: 5000,     // maximum amount of time to wait between reconnection attempts. Each attempt increases the reconnection delay by 2x along with a randomization factor
+            randomizationFactor: 0.5
+        });
         this.refs = React.createRef();
         socketSubscribe(socket, this);
     }
