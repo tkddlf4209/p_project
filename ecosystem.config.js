@@ -3,11 +3,11 @@ module.exports = {
     name        : "server",
     script      : "./server.js",
     watch       : true,
-    instances  : 1,
+    instances  : 0,
     exec_mode  : "cluster"
   },{
     name      : "worker",
     script     : "./worker.js",
-    watch       : true,
+    watch       : true
   }]
 };

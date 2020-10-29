@@ -14,6 +14,8 @@ function now(){
   return moment().format("YYYY.MM.DD HH:mm:ss");
 }
 
+console.log("########### START WORKER ###########");
+
 function randomInt(max) {
     return Math.floor(Math.random() * (max));
 }
@@ -32,8 +34,6 @@ function sampleData(){
 sampleData();
 
 setInterval(function(){
-    
-    console.log("-- Update --");
     var pos = randomInt(sample_count)
     data[pos].status = randomInt(3);
     data[pos].timestamp = now();
@@ -41,7 +41,7 @@ setInterval(function(){
 
 setInterval(function(){
     //console.log(Date.now() - start);
-    console.log("send Message");
+    //console.log("send Message");
 
     pm2.connect(function(err) {
 
@@ -51,9 +51,10 @@ setInterval(function(){
 
     pm2.list(function(err, processes) {
         processes.forEach(function(process) {
+          
           if(process.name==="server"){
             
-            console.log(`Sending message to process with pid: ${process.pm_id}`);
+            //console.log(`Sending message to process with pid: ${process.pm_id}`);
             pm2.sendDataToProcessId(
                 {
                 type: 'process:msg',
@@ -74,6 +75,18 @@ setInterval(function(){
 
 }, 1000);
 
+const init = async () => {
+    for (let i=0; i<5; i++){
+        console.log(1);
+        await sleep(1000);
+        console.log(2);
+    }
+ }
+ const sleep = (ms) => {
+     return new Promise(resolve=>{
+         setTimeout(resolve,ms)
+     }) 
+ }
 
 
 // start();

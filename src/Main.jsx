@@ -27,11 +27,10 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import io from "socket.io-client";
 
-
-
-
-
 const socketSubscribe = (socket, app) => {
+
+
+
     socket.on("list", (data) => {
         app.setState({
             items: data
@@ -106,8 +105,15 @@ const socketSubscribe = (socket, app) => {
         console.log('disconnect');
         socket.removeAllListeners();
     });
-};
 
+    setInterval(() => {
+        socket.emit('PING');
+    }, 10000);
+
+    socket.on("PONG", () => {
+        console.log("RECEIVE PONG");
+    })
+};
 
 class ToggleButton extends Component {
     render() {
@@ -162,8 +168,10 @@ export default class Main extends Component {
     }
 
     componentDidMount() {
-        const ADDRESS = "http://" + window.location.hostname + ":3000";
-        const socket = io.connect(ADDRESS);
+        const url = "http://" + window.location.hostname + ":3000";
+        //const socket = io.connect(ADDRESS);
+
+        var socket = io(url, { transports: ['websocket'] });
         this.refs = React.createRef();
         socketSubscribe(socket, this);
     }
@@ -228,7 +236,7 @@ export default class Main extends Component {
                             {item.status == 1 && "미연결"}
                             {item.status == 2 && "화재발생"}
                         </span>
-                        {item.status == 0 &&
+                        {/* {item.status == 0 &&
                             <Badge pill variant="success">
                                 normal
                             </Badge>
@@ -242,7 +250,7 @@ export default class Main extends Component {
                             <Badge pill variant="danger">
                                 danger
                             </Badge>
-                        }
+                        } */}
 
                     </td>
                     <td>
@@ -256,7 +264,6 @@ export default class Main extends Component {
 
         return (
             <>
-
                 <Container>
                     <Row>
                         <Col >
