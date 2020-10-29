@@ -2,11 +2,9 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const port = 3000;
-const server = require("http").Server(app);
+const server = require("http").createServer(app);
 const io = require("socket.io")(server);
 var redis = require('socket.io-redis');
-var pm2 = require('pm2');
-const {Worker} = require('worker_threads');
 var data;
 
 
@@ -21,7 +19,7 @@ server.listen(port, function () {
   console.log(`application is listening on port@ ${port}...`);
 });
 
-//io.adapter(redis({ host: 'localhost', port: 6379 }));
+io.adapter(redis({ host: 'localhost', port: 6379 }));
 io.on("connection", (socket) => {
   console.log("websocket connected ID : ", socket.id);
 
@@ -42,7 +40,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("user disconnected");
   });
-});
+}); 
 
 process.on('message', function(packet) {
   //console.log(packet);

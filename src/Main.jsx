@@ -46,35 +46,14 @@ const socketSubscribe = (socket, app) => {
                     switch (newItem.status) {
                         case 0:
                             toast.success(<div>회로 {newItem.id} 정상<br /> {newItem.timestamp}</div>, {
-                                position: "top-right",
-                                autoClose: 3000,
-                                hideProgressBar: false,
-                                closeOnClick: true,
-                                pauseOnHover: true,
-                                draggable: true,
-                                progress: undefined,
                             });
                             break;
                         case 1:
                             toast.warning(<div>회로 {newItem.id} 연결끊김<br /> {newItem.timestamp}</div>, {
-                                position: "top-right",
-                                autoClose: 3000,
-                                hideProgressBar: false,
-                                closeOnClick: true,
-                                pauseOnHover: true,
-                                draggable: true,
-                                progress: undefined,
                             });
                             break;
                         case 2:
                             toast.error(<div>회로 {newItem.id} 화재발생<br /> {newItem.timestamp}</div>, {
-                                position: "top-right",
-                                autoClose: 3000,
-                                hideProgressBar: false,
-                                closeOnClick: true,
-                                pauseOnHover: true,
-                                draggable: true,
-                                progress: undefined,
                             });
                             break;
                     }
@@ -109,10 +88,14 @@ const socketSubscribe = (socket, app) => {
         console.log('reconnect');
         MySocket = socket;
         socketSubscribe(socket, app);
+        toast.info(<div>소켓 재연결 성공!</div>, {
+        });
     });
 
     socket.on("reconnecting", function (delay, attempt) {
         console.log('reconnecting');
+        toast.info(<div>소켓 재연결 중...</div>, {
+        });
     });
 
     socket.on("PONG", () => {
@@ -199,12 +182,10 @@ export default class Main extends Component {
         //     console.log(this.myRef.current);
         // }
 
-
         if (this.state.autoScroll && $('.update').length) {
             var top = $('.update').offset().top;
             window.scrollTo({ top: top, behavior: 'smooth' })
         }
-
     }
 
     onFilterChange(event) {
@@ -246,7 +227,7 @@ export default class Main extends Component {
 
             return (
                 <tr key={item.id} className={item.update ? "update" : ""} onClick={executeScroll} ref={myRef}>
-                    <td>{item.id}</td>
+                    <td>{item.id} </td>
                     <td>{item.timestamp}</td>
                     <td>
                         <span className="mr-2">
@@ -354,7 +335,17 @@ export default class Main extends Component {
                     </Row>
 
                 </Container>
-                <ToastContainer />
+                <ToastContainer
+                    position="bottom-right"
+                    autoClose={2500}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover={false}
+                />
             </>
         );
     }

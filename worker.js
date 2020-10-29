@@ -33,16 +33,26 @@ function sampleData(){
 }
 sampleData();
 
-setInterval(function(){
-    var pos = randomInt(sample_count)
-    data[pos].status = randomInt(3);
-    data[pos].timestamp = now();
-},3000);
 
 setInterval(function(){
     //console.log(Date.now() - start);
     //console.log("send Message");
 
+
+    // update random state
+    var pos = randomInt(sample_count)
+
+    while(true){
+        var temp = randomInt(3);
+        if(data[pos].status != temp){
+            data[pos].status = temp;
+            break;
+        }
+    }
+    data[pos].timestamp = now();
+    
+
+    // send list websocket data
     pm2.connect(function(err) {
 
     if(err){
@@ -51,7 +61,7 @@ setInterval(function(){
 
     pm2.list(function(err, processes) {
         processes.forEach(function(process) {
-          
+       
           if(process.name==="server"){
             
             //console.log(`Sending message to process with pid: ${process.pm_id}`);
@@ -73,7 +83,7 @@ setInterval(function(){
         });
     });
 
-}, 1000);
+}, 5000);
 
 const init = async () => {
     for (let i=0; i<5; i++){
