@@ -32,56 +32,53 @@ function sampleData(){
   data= arrays;
 }
 sampleData();
-
-(() => {
-    pm2.connect(function(err) {
+async function list () {  
+    return new Promise((resolve, reject) => {
+      pm2.list((err, res) => {
+        if(err){reject(err)} resolve(res)
+      })
+    })
+ }
+(async () => {
+    pm2.connect(async function(err) {
         if(err){
             console.log('err : '+err);
             return;
         }
-            
-        pm2.list(function(err, processes) {
+        var processes = await list();
+        setInterval(function(){
 
-            setInterval(function(){
+            var pos = randomInt(sample_count)
 
-                var pos = randomInt(sample_count)
-    
-                while(true){
-                    var temp = randomInt(3);
-                    if(data[pos].status != temp){
-                        data[pos].status = temp;
-                        break;
-                    }
+            while(true){
+                var temp = randomInt(3);
+                if(data[pos].status != temp){
+                    data[pos].status = temp;
+                    break;
                 }
-                data[pos].timestamp = now();
+            }
+            data[pos].timestamp = now();
 
+            processes.forEach(function(process) {
+       
+            if(process.name==="server"){
+              
+              console.log(`Sending message to process with pid: ${process.pm_id}`);
+              pm2.sendDataToProcessId(
+                  {
+                  type: 'process:msg',
+                  data: data,
+                  id: process.pm_id,
+                  topic: 'bucket',
+                  },
+                  function(error,res) {
+                        //console.log('send Error : '+error);
+                  },
+              );
+             } 
+            });
 
-                
-                processes.forEach(function(process) {
-           
-                if(process.name==="server"){
-                  
-                  console.log(`Sending message to process with pid: ${process.pm_id}`);
-                  pm2.sendDataToProcessId(
-                      {
-                      type: 'process:msg',
-                      data: data,
-                      id: process.pm_id,
-                      topic: 'bucket',
-                      },
-                      function(error) {
-                            console.log('send Error : '+error);
-                      },
-                  );
-                 } 
-                });
-    
-            },5000);
-
-    
-            //pm2.disconnect();
-        });
-
+        },5000);
 
        
 
