@@ -33,6 +33,60 @@ function sampleData(){
 }
 sampleData();
 
+(() => {
+    pm2.connect(function(err) {
+        if(err){
+            console.log('err : '+err);
+            return;
+        }
+            
+        pm2.list(function(err, processes) {
+
+            setInterval(function(){
+
+                var pos = randomInt(sample_count)
+    
+                while(true){
+                    var temp = randomInt(3);
+                    if(data[pos].status != temp){
+                        data[pos].status = temp;
+                        break;
+                    }
+                }
+                data[pos].timestamp = now();
+
+
+                
+                processes.forEach(function(process) {
+           
+                if(process.name==="server"){
+                  
+                  console.log(`Sending message to process with pid: ${process.pm_id}`);
+                  pm2.sendDataToProcessId(
+                      {
+                      type: 'process:msg',
+                      data: data,
+                      id: process.pm_id,
+                      topic: 'bucket',
+                      },
+                      function(error) {
+                            console.log('send Error : '+error);
+                      },
+                  );
+                 } 
+                });
+    
+            },5000);
+
+    
+            //pm2.disconnect();
+        });
+
+
+       
+
+    });
+})();
 
 setInterval(function(){
     //console.log(Date.now() - start);
@@ -40,58 +94,15 @@ setInterval(function(){
 
 
     // update random state
-    var pos = randomInt(sample_count)
-
-    while(true){
-        var temp = randomInt(3);
-        if(data[pos].status != temp){
-            data[pos].status = temp;
-            break;
-        }
-    }
-    data[pos].timestamp = now();
+   
     
 
     // send list websocket data
-    pm2.connect(function(err) {
 
-    if(err){
-        console.log('err : '+err);
-    }
-
-    pm2.list(function(err, processes) {
-        processes.forEach(function(process) {
-       
-          if(process.name==="server"){
-            
-            console.log(`Sending message to process with pid: ${process.pm_id}`);
-            pm2.sendDataToProcessId(
-                {
-                type: 'process:msg',
-                data: data,
-                id: process.pm_id,
-                topic: 'bucket',
-                },
-                function(error) {
-                      console.log('send Error : '+error);
-                },
-            );
-           } 
-        });
-
-        pm2.disconnect();
-        });
-    });
 
 }, 5000);
 
-const init = async () => {
-    for (let i=0; i<5; i++){
-        console.log(1);
-        await sleep(1000);
-        console.log(2);
-    }
- }
+
  const sleep = (ms) => {
      return new Promise(resolve=>{
          setTimeout(resolve,ms)

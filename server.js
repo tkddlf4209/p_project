@@ -19,9 +19,7 @@ server.listen(port, function () {
   console.log(`application is listening on port@ ${port}...`);
 });
 
-io.adapter(redis({ host: 'localhost', port: 6379 }));
-
-
+//io.adapter(redis({ host: 'localhost', port: 6379 }));
 var conn_socket_ids=[];
 
 function deleteSocketId(id) {
@@ -41,10 +39,10 @@ io.on("connection", (socket) => {
   //    io.to(socket.id).emit("list", { socketId: socket.id });
   // });
 
-  socket.on("PING",()=>{
-    console.log("RECEIVE PING");
-    socket.emit('PONG');
-  });
+  // socket.on("PING",()=>{
+  //   console.log("RECEIVE PING");
+  //   socket.emit('PONG');
+  // });
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
@@ -53,7 +51,7 @@ io.on("connection", (socket) => {
 }); 
 
 process.on('message', function(packet) {
-  //console.log(conn_socket_ids.length);
+  console.log('conn socket count',conn_socket_ids.length);
   data = packet.data;
   conn_socket_ids.map((id)=>  io.to(id).emit('update',data));
 

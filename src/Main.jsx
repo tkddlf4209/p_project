@@ -103,11 +103,11 @@ const socketSubscribe = (socket, app) => {
     })
 };
 
-setInterval(() => {
-    if (MySocket != null) {
-        MySocket.emit('PING');
-    }
-}, 10000);
+// setInterval(() => {
+//     if (MySocket != null) {
+//         MySocket.emit('PING');
+//     }
+// }, 10000);
 
 class ToggleButton extends Component {
     render() {
