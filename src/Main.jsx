@@ -57,7 +57,6 @@ const socketSubscribe = (socket, app) => {
                             });
                             break;
                     }
-                    //window.scrollTo(0, app.refs[newItem.id].offsetTop);
 
                 }
             })
@@ -67,7 +66,6 @@ const socketSubscribe = (socket, app) => {
             items: data
         });
 
-        //console.log("@@@@" + app.refs);
         //console.log("update :  ", data);
     });
 
@@ -173,7 +171,6 @@ export default class Main extends Component {
             reconnectionDelayMax: 5000,     // maximum amount of time to wait between reconnection attempts. Each attempt increases the reconnection delay by 2x along with a randomization factor
             randomizationFactor: 0.5
         });
-        this.refs = React.createRef();
         socketSubscribe(socket, this);
     }
 
@@ -310,7 +307,7 @@ export default class Main extends Component {
                     </Row>
                     <Row >
                         <Col>
-                            <Table striped bordered hover>
+                            <Table striped bordered hover >
                                 <thead>
                                     <tr>
                                         <th>회로</th>

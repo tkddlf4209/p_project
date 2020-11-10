@@ -9,11 +9,14 @@ var data;
 
 
 //const route = require("./routes/index");
-//gpio readall
+//gpio readall 
 
 app.use(cors());
 app.use(express.static("build"));
 //app.use("/api", route);
+
+
+
 
 server.listen(port, function () {
   console.log(`application is listening on port@ ${port}...`);
@@ -52,6 +55,7 @@ io.on("connection", (socket) => {
 
 process.on('message', function(packet) {
   console.log('conn socket count',conn_socket_ids.length);
+  console.log('packet',packet);
   data = packet.data;
   conn_socket_ids.map((id)=>  io.to(id).emit('update',data));
 
