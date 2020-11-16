@@ -1,6 +1,7 @@
 var pm2 = require('pm2');
 const Gpio = require("onoff").Gpio;
 var sleep = require('sleep');
+//var realm = require('./realm/index'); 
 const a0 = new Gpio(5, "out");
 const a1 = new Gpio(6, "out");
 const a2 = new Gpio(13, "out");
@@ -8,12 +9,14 @@ const s0 = new Gpio(16, "out");
 const s1 = new Gpio(20, "out");
 const s2 = new Gpio(21, "out");
 
-
 const INA = new Gpio(19, 'in');
 const INB = new Gpio(26, 'in');
 
 //const INA = new Gpio(19, 'in', 'both');
 //const INB = new Gpio(26, 'in', 'both');
+const realm = require("./realm/index");
+var c = realm.objects('Config');
+var configs = {};
 
 var data;
 var sample_count = 6;
@@ -32,61 +35,71 @@ function now(){
 
 console.log("########### START WORKER ###########");
 
-function randomInt(max) {
-    return Math.floor(Math.random() * (max));
-}
+// function randomInt(max) {
+//     return Math.floor(Math.random() * (max));
+// }
 
-function sampleData(){
-  var arrays = [];
-  for(var i =1 ; i<= sample_count ;i ++){
-    arrays.push({
-         id : i,
-         timestamp : "",
-         status : randomInt(2)
-      });
-  }
-  data= arrays;
-}
+// function sampleData(){
+//   var arrays = [];
+//   for(var i =1 ; i<= sample_count ;i ++){
+//     arrays.push({
+//          id : i,
+//          timestamp : "",
+//          status : randomInt(2)
+//       });
+//   }
+//   data= arrays;
+// }
 
-sampleData();
+// sampleData();
+
 async function list () {  
     return new Promise((resolve, reject) => {
       pm2.list((err, res) => {
         if(err){reject(err)} resolve(res)
       })
     })
- }
+}
 
- (async () => {
-    pm2.connect(async function(err) {
-        if(err){
-            console.log('err : '+err);
-            return;
-        }
-        var processes = await list();
-        setInterval(function(){
-            processes.forEach(function(process) {
+
+async function connect () {  
+    return new Promise((resolve, reject) => {
+      pm2.connect((err) => {
+        if(err){reject(err)} resolve()
+      })
+    })
+}
+
+// (async () => {
+//     pm2.connect(async function(err) {
+//         if(err){
+//             console.log('err : '+err);
+//             return;
+//         }
+//         var processes = await list();
+//         setInterval(function(){
+//             processes.forEach(function(process) {
        
-            if(process.name==="server"){
+//             if(process.name==="server"){
               
-              //console.log(`Sending message to process with pid: ${process.pm_id}`);
-              pm2.sendDataToProcessId(
-                  {
-                    type: 'process:msg',
-                    data: data,
-                    id: process.pm_id,
-                    topic: 'bucket',
-                  },
-                  function(error,res) {
-                        //console.log('send Error : '+error);
-                  },
-              );
-             } 
-            });
-        },5000);
+//               //console.log(`Sending message to process with pid: ${process.pm_id}`);
+//               pm2.sendDataToProcessId(
+//                   {
+//                     type: 'process:msg',
+//                     data: data,
+//                     id: process.pm_id,
+//                     topic: 'bucket',
+//                   },
+//                   function(error,res) {
+//                         //console.log('send Error : '+error);
+//                   },
+//               );
+//              } 
+//             });
+//         },5000);
 
-    });
-})();
+//     });
+// })();
 
 
 // (async () => {
@@ -137,17 +150,20 @@ async function list () {
 var send_data;
 function getStatus(ina, inb){
     /*
-                ina(1) inb(0) : 단선
-                ina(0) inb(1) : 정상
-                ina(0) inb(0) : 화재발생
+                ina(1) inb(0) : X
+                ina(0) inb(1) : 정상 (2.43~22.1V)
+                ina(0) inb(0) : 화재발생 (0~2.42V)
+                ina(1) inb(1) : 단선 (22.2~24V)
      */
 
-     if(ina ==1 && inb ==0){
-         return WARNNING;
+     if(ina ==0 && inb ==0){
+        return DAGNER;
      }else if(ina == 0 && inb == 1){
         return NORMAL;
+     }else if(ina == 1  && inb == 1){
+        return WARNNING;
      }else{
-        return DAGNER;
+        return NORMAL;
      }
 }
 // INA.watch((err,value) =>{
@@ -166,10 +182,10 @@ function getStatus(ina, inb){
 //     }
 // });
 
-var muxCount = 4;
+var muxCount = 8;
 var send_data = [];
 function update(init){
-
+    //console.log('----------------------------------------------------');
     var r_a0 = a0.readSync();
     var r_a1 = a1.readSync();
     var r_a2 = a2.readSync();
@@ -178,89 +194,142 @@ function update(init){
     var r_s1 = s1.readSync();
     var r_s2 = s2.readSync();
 
-
     var id = 0;
+    var diff = false;
+    var enable = false;
     for(var i = 0; i < muxCount; i++) {
-
-        s2.writeSync(((i & (1 << 0))>0) >0?1:0);
+       
+        s0.writeSync(((i & (1 << 0))>0) >0?1:0);
         s1.writeSync(((i & (1 << 1))>0) >0?1:0);
-        s0.writeSync(((i & (1 << 2))>0) >0?1:0);
+        s2.writeSync(((i & (1 << 2))>0) >0?1:0);
 
         for(var j = 0; j < 8; j++){
-            a2.writeSync(((j & (1 << 0))>0) >0?1:0);
+            a0.writeSync(((j & (1 << 0))>0) >0?1:0);
             a1.writeSync(((j & (1 << 1))>0) >0?1:0);
-            a0.writeSync(((j & (1 << 2))>0) >0?1:0);
-
-            var r_a0 = a0.readSync();
-            var r_a1 = a1.readSync();
+            a2.writeSync(((j & (1 << 2))>0) >0?1:0);
+        
             var r_a2 = a2.readSync();
+            var r_a1 = a1.readSync();
+            var r_a0 = a0.readSync();
 
-            var r_s0 = s0.readSync();
-            var r_s1 = s1.readSync();
             var r_s2 = s2.readSync();
-
-            var ina = INA.readSync();
-            var inb = INB.readSync();
+            var r_s1 = s1.readSync();
+            var r_s0 = s0.readSync();
+    
+            var ina = INA.readSync(); 
+            var inb = INB.readSync(); 
 
 
             if(init){
+                if(configs[(id+1)] != undefined){
+                    enable = configs[(id+1)]
+                }else{
+                    enable = false;
+                }
+
                 send_data.push({
-                    id : ++id,
+                    id : (id+1),
                     timestamp : "",
-                    status : getStatus(ina,inb)
+                    status : getStatus(ina,inb),
+                    enable : enable
                 });
             }else{
-                var tmp = send_data[id++];
-                var status = getStatus(ina,inb);
-                if(tmp.status != status){
-                    tmp.timestamp = now();
-                    tmp.status = status;
+
+                var item = send_data[id];
+                
+                if(configs[(id+1)] != undefined && item.enable != configs[(id+1)]){
+                    item.enable = configs[(id+1)];
+                    diff =true;
+                }
+
+                var new_status = getStatus(ina,inb);
+                if(item.status != new_status){
+                    item.timestamp = now();
+                    item.status = new_status;
+                    diff = true; 
+                    //console.log("data (a2,a1,a0,s2,s1,s0,INA,INB ) : ",r_a2,r_a1,r_a0,r_s2,r_s1,r_s0,"::::",ina, inb);
                 }
             }
+  
+            id++;
 
-            console.log("data (a0,a1,a2,s0,s1,s2,INA,INB ) : ",r_a0,r_a1,r_a2,r_s0,r_s1,r_s2,"::::",ina, inb);
-            
+            //console.log("data (a2,a1,a0,s2,s1,s0,INA,INB ) : ",r_a2,r_a1,r_a0,r_s2,r_s1,r_s0,"::::",ina, inb);
+
         }
+
     }
-    console.log(send_data);
+
+    if(init){
+        sleep.sleep(1);
+        sendDataToProcesses(send_data);
+    }
+
+    if(diff){
+        sendDataToProcesses(send_data);
+    }
+    //console.log(send_data); 
 }
 
-update(true);  // init send_data
-function test(){
-
-    console.log('test');
-    var s = 7; // s
-    var a = 7; // a
-
-    s2.writeSync(((s & (1 << 0))>0) >0?1:0);
-    s1.writeSync(((s & (1 << 1))>0) >0?1:0);
-    s0.writeSync(((s & (1 << 2))>0) >0?1:0);
-
-    a2.writeSync(((a & (1 << 0))>0) >0?1:0);
-    a1.writeSync(((a & (1 << 1))>0) >0?1:0);
-    a0.writeSync(((a & (1 << 2))>0) >0?1:0);
-
-    var r_a0 = a0.readSync();
-    var r_a1 = a1.readSync();
-    var r_a2 = a2.readSync();
-
-    var r_s0 = s0.readSync();
-    var r_s1 = s1.readSync();
-    var r_s2 = s2.readSync();
-
-    var ina = INA.readSync();
-    var inb = INB.readSync();
-
-    console.log("data (a0,a1,a2,s0,s1,s2,INA,INB ) : ",r_a0,r_a1,r_a2,r_s0,r_s1,r_s2,"::::",ina, inb);
-      
+var processes;
+async function initProcesses(){
+    try{
+        await connect();
+        processes = await list();
+        console.log('processes count -> ', processes.length);
+        return true;
+    }catch(e){
+        return false;
+    }
 }
 
-setInterval(function(){
-    //var start = Date.now();
-    //update(false); // update send_data
-    test();
-    //console.log('end', Date.now() - start);
-}, 2000);
+function sendDataToProcesses(data){
+    if(processes != null){
+        processes.forEach(function(process) {
+          if(process.name==="server"){
+            console.log(`Sending message to process with pid: ${process.pm_id}`);
+            pm2.sendDataToProcessId(
+              {
+                type: 'process:msg',
+                data: data,
+                id: process.pm_id,
+                topic: 'bucket',
+              },
+              function(error,res) {
+                //console.log('send Error : '+error);
+              },
+            );
+         } 
+        });
+    }
+}
+
+function initConfigs(){
+    c.map(config =>{
+            configs[config.id] = config.enable == 1?true:false;
+        }
+    );
+    console.log('initConfigs >> ',configs);
+}
+
+async function start(){
+    var init = await initProcesses();
+
+    if(init){
+        initConfigs();
+        update(true);  // init send_data
+
+        setInterval(function(){
+            update(false);
+        },10);
+
+    }else{
+        console.log('initProcesses fail');
+    }
+   
+}
+
+start();
+
 
 // start();
 
@@ -285,3 +354,51 @@ setInterval(function(){
     
 //   }
 // }
+
+
+function test(){
+    console.log('test');
+    var s = 0; // s
+    var a = 0; // a
+
+    //if(flag){
+        s0.writeSync(((s & (1 << 0))>0) >0?1:0);
+        s1.writeSync(((s & (1 << 1))>0) >0?1:0);
+        s2.writeSync(((s & (1 << 2))>0) >0?1:0);
+    
+        a0.writeSync(((a & (1 << 0))>0) >0?1:0);
+        a1.writeSync(((a & (1 << 1))>0) >0?1:0);
+        a2.writeSync(((a & (1 << 2))>0) >0?1:0);
+    //    flag = false;
+    //}
+  
+    var r_a2 = a2.readSync();
+    var r_a1 = a1.readSync();
+    var r_a0 = a0.readSync();
+
+    var r_s2 = s2.readSync();
+    var r_s1 = s1.readSync();
+    var r_s0 = s0.readSync();
+
+    //sleep.msleep(1000);
+    var ina = INA.readSync();
+    var inb = INB.readSync();
+
+    //INA.writeSync(0);
+    //INB.writeSync(0);
+    console.log("data (a2,a1,a0,s2,s1,s0,INA,INB ) : ",r_a2,r_a1,r_a0,r_s2,r_s1,r_s0,"::::",ina, inb);
+    
+}
+
+process.on('message', function(packet) {
+    
+    var ids = packet.data.ids;
+    var enable = packet.data.enable;
+    
+    ids.split(",").map(id => {
+        configs[id] = enable==1?true:false;
+    });
+    update(false);
+});
+
+

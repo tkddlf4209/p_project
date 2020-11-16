@@ -26,7 +26,7 @@ import warning from './img/warning.png'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import io from "socket.io-client";
-var MySocket;
+var serverSocket;
 const socketSubscribe = (socket, app) => {
 
     socket.removeAllListeners();
@@ -34,10 +34,11 @@ const socketSubscribe = (socket, app) => {
         app.setState({
             items: data
         });
-
         //console.log("list :  ", data);
     });
     socket.on("update", (data) => {
+
+        console.log("update :  ", data);
         app.state.items.forEach(oldItem => {
             data.forEach(newItem => {
                 // Check if it matches
@@ -49,7 +50,7 @@ const socketSubscribe = (socket, app) => {
                             });
                             break;
                         case 1:
-                            toast.warning(<div>회로 {newItem.id} 연결끊김<br /> {newItem.timestamp}</div>, {
+                            toast.warning(<div>회로 {newItem.id} 단선<br /> {newItem.timestamp}</div>, {
                             });
                             break;
                         case 2:
@@ -65,13 +66,13 @@ const socketSubscribe = (socket, app) => {
         app.setState({
             items: data
         });
-
         //console.log("update :  ", data);
     });
 
     socket.on('connect', function () {
         console.log('connect');
-        MySocket = socket;
+        serverSocket = socket;
+
     });
     socket.on('event', function (data) {
         console.log('event');
@@ -79,12 +80,12 @@ const socketSubscribe = (socket, app) => {
     });
     socket.on('disconnect', function () {
         console.log('disconnect');
-        MySocket = null;
+        serverSocket = null;
     });
 
     socket.on('reconnect', function () {
         console.log('reconnect');
-        MySocket = socket;
+        serverSocket = socket;
         socketSubscribe(socket, app);
         toast.info(<div>소켓 재연결 성공!</div>, {
         });
@@ -102,8 +103,8 @@ const socketSubscribe = (socket, app) => {
 };
 
 // setInterval(() => {
-//     if (MySocket != null) {
-//         MySocket.emit('PING');
+//     if (serverSocket != null) {
+//         serverSocket.emit('PING');
 //     }
 // }, 10000);
 
@@ -194,7 +195,7 @@ export default class Main extends Component {
             case "정상":
                 filter = 0;
                 break;
-            case "미연결":
+            case "단선":
                 filter = 1;
                 break;
             case "화재발생":
@@ -209,7 +210,13 @@ export default class Main extends Component {
 
     render() {
         var countType = (status) => {
-            const filter_items = this.state.items.filter(item => item.status === status);
+            var filter_items;
+            if (status == -1) {
+                filter_items = this.state.items.filter(item => item.enable);
+            } else {
+                filter_items = this.state.items.filter(item => item.status === status && item.enable);
+            }
+
             return filter_items.length;
         }
 
@@ -222,16 +229,25 @@ export default class Main extends Component {
             const myRef = React.createRef()
             const executeScroll = () => scrollToRef(myRef)
 
+
             return (
-                <tr key={item.id} className={item.update ? "update" : ""} onClick={executeScroll} ref={myRef}>
+                <tr key={item.id} className={item.update ? "update" : ""} ref={myRef}>
                     <td>{item.id} </td>
                     <td>{item.timestamp}</td>
-                    <td>
-                        <span className="mr-2">
-                            {item.status == 0 && "정상"}
-                            {item.status == 1 && "미연결"}
-                            {item.status == 2 && "화재발생"}
-                        </span>
+                    <td >
+
+                        {item.enable &&
+                            <span className="mr-2">
+                                {item.status == 0 && <Image src={normal} width="15" roundedCircle />}
+                                {item.status == 1 && <Image src={warning} width="15" roundedCircle />}
+                                {item.status == 2 && <Image src={danger} width="15" roundedCircle />}
+
+                                {item.status == 0 && " 정상"}
+                                {item.status == 1 && " 단선"}
+                                {item.status == 2 && " 화재발생"}
+
+                            </span>
+                        }
                         {/* {item.status == 0 &&
                             <Badge pill variant="success">
                                 normal
@@ -250,9 +266,19 @@ export default class Main extends Component {
 
                     </td>
                     <td>
-                        {item.status == 0 && <Image src={normal} width="15" roundedCircle />}
-                        {item.status == 1 && <Image src={warning} width="15" roundedCircle />}
-                        {item.status == 2 && <Image src={danger} width="15" roundedCircle />}
+                        <Form.Check aria-label="option 1" checked={item.enable} onChange={
+                            (e) => {
+                                if (serverSocket != null) {
+                                    serverSocket.emit('config', {
+                                        ids: item.id + "",
+                                        enable: item.enable == true ? 0 : 1
+                                    });
+                                }
+                                //this.state.autoScroll = checked;
+                                //this.setState({ autoScroll: checked })
+                            }
+                        } />
+
                     </td>
                 </tr>
             )
@@ -274,9 +300,9 @@ export default class Main extends Component {
                         </Col>
                     </Row>
                     <Row>
-                        <DashboardCol bg="primary" title="전체" count={this.state.items.length} ></DashboardCol>
+                        <DashboardCol bg="primary" title="전체" count={countType(-1)} ></DashboardCol>
                         <DashboardCol bg={countType(0) > 0 ? "success" : "dark"} title="정상" count={countType(0)} ></DashboardCol>
-                        <DashboardCol bg={countType(1) > 0 ? "warning" : "dark"} title="미연결" count={countType(1)} ></DashboardCol>
+                        <DashboardCol bg={countType(1) > 0 ? "warning" : "dark"} title="단선" count={countType(1)} ></DashboardCol>
                         <DashboardCol bg={countType(2) > 0 ? "danger" : "dark"} title="화재" count={countType(2)} ></DashboardCol>
                     </Row>
                     <hr></hr>
@@ -298,7 +324,7 @@ export default class Main extends Component {
                                     >
                                         <option>전체</option>
                                         <option>정상</option>
-                                        <option>미연결</option>
+                                        <option>단선</option>
                                         <option>화재발생</option>
                                     </Form.Control>
                                 </Form.Group>
@@ -312,8 +338,8 @@ export default class Main extends Component {
                                     <tr>
                                         <th>회로</th>
                                         <th>발생시간</th>
-                                        <th>상태</th>
-                                        <th width="10"></th>
+                                        <th width="130">상태</th>
+                                        <th width="80">활성화</th>
                                     </tr>
                                 </thead>
                                 <tbody>
