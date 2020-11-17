@@ -233,7 +233,7 @@ export default class Main extends Component {
             return (
                 <tr key={item.id} className={item.update ? "update" : ""} ref={myRef}>
                     <td>{item.id} </td>
-                    <td>{item.timestamp}</td>
+                    <td>{item.enable && item.timestamp}</td>
                     <td >
 
                         {item.enable &&
@@ -346,7 +346,7 @@ export default class Main extends Component {
                                     {
 
                                         this.state.items.filter(item =>
-                                            this.state.filter == -1 ? true : this.state.filter === item.status).map(item =>
+                                            this.state.filter == -1 ? true : this.state.filter === item.status && item.enable).map(item =>
                                                 (
                                                     TrRow(item)
                                                 )

@@ -36,6 +36,10 @@ code {
   animation:         update 2s linear 2; /* IE 10+ */
 }
 
+
+.disable {
+  background-color: aqua
+}
 // tr {
 //   -moz-transition: all 0.5s ease-in;
 //   -o-transition: all 0.5s ease-in;
@@ -51,6 +55,5 @@ code {
 //     opacity: 0;
 //   }
 // }
-
 
 @import "~bootstrap/scss/bootstrap";
