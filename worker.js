@@ -233,6 +233,7 @@ function update(init){
                     status : getStatus(ina,inb),
                     enable : enable
                 });
+                 console.log("data (a2,a1,a0,s2,s1,s0,INA,INB ) : ",r_a2,r_a1,r_a0,r_s2,r_s1,r_s0,"::::",ina, inb);
             }else{
 
                 var item = send_data[id];
@@ -243,7 +244,7 @@ function update(init){
                 }
 
                 var new_status = getStatus(ina,inb);
-                if(item.status != new_status){
+                if(item.status != new_status && item.enable){
                     item.timestamp = now();
                     item.status = new_status;
                     diff = true; 
@@ -319,6 +320,7 @@ async function start(){
         update(true);  // init send_data
 
         setInterval(function(){
+	    //console.log("tttt");
             update(false);
         },10);
 

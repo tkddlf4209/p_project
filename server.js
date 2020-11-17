@@ -132,7 +132,7 @@ io.on("connection", (socket) => {
 
 process.on('message', function(packet) {
   //console.log('conn socket count',conn_socket_ids.length);
-  console.log('message update');
+  //console.log('message update');
   data = packet.data;
   conn_socket_ids.map((id)=>  io.to(id).emit('update',data));
   //console.log(packet.data);
