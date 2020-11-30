@@ -318,20 +318,26 @@ async function start(){
     if(init){
         initConfigs();
         update(true);  // init send_data
-
-        setInterval(function(){
+	
+	setInterval(function(){
 	    //console.log("tttt");
             update(false);
         },10);
-
+    
     }else{
         console.log('initProcesses fail');
     }
    
 }
 
-start();
+setInterval(function(){
+    console.log('------------------------------------');
+    update(true);
+    console.log('------------------------------------');
+},3000);
 
+//start();
+//test();
 
 // start();
 
@@ -360,8 +366,8 @@ start();
 
 function test(){
     console.log('test');
-    var s = 0; // s
-    var a = 0; // a
+    var s = 2; // s
+    var a = 6; // a
 
     //if(flag){
         s0.writeSync(((s & (1 << 0))>0) >0?1:0);
